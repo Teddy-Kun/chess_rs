@@ -240,9 +240,9 @@ impl Board {
 
 impl Display for Board {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		const BORDER: &str = "+-+-+-+-+-+-+-+-+";
+		const BORDER: &str = "  +-+-+-+-+-+-+-+-+";
 
-		let into_cell_row = |row: [&BoardOption; 8]| -> String {
+		let into_cell_row = |row: [&BoardOption; 8], row_i: usize| -> String {
 			let mut piece_chars: [char; 8] = [' '; 8];
 
 			for (i, elem) in row.iter().enumerate() {
@@ -255,8 +255,11 @@ impl Display for Board {
 				piece_chars[i] = ch;
 			}
 
+			let row_index = ((row_i as i8) - 8).abs();
+
 			format!(
-				"|{}|{}|{}|{}|{}|{}|{}|{}|\n",
+				"{} |{}|{}|{}|{}|{}|{}|{}|{}| {}\n",
+				row_index,
 				piece_chars[0],
 				piece_chars[1],
 				piece_chars[2],
@@ -264,7 +267,8 @@ impl Display for Board {
 				piece_chars[4],
 				piece_chars[5],
 				piece_chars[6],
-				piece_chars[7]
+				piece_chars[7],
+				row_index,
 			)
 		};
 
@@ -281,10 +285,14 @@ impl Display for Board {
 		];
 
 		for (i, row) in self.board.iter().array_chunks::<8>().enumerate() {
-			str_rows[i] = into_cell_row(row);
+			str_rows[i] = into_cell_row(row, i);
 		}
 
-		let mut out = String::with_capacity(305);
+		let mut out = String::with_capacity(457);
+
+		const ROW_ABC: &str = "   a b c d e f g h";
+		out += ROW_ABC;
+		out.push('\n');
 
 		for row in str_rows {
 			out += BORDER;
@@ -292,6 +300,8 @@ impl Display for Board {
 			out += row.as_str();
 		}
 		out += BORDER;
+		out.push('\n');
+		out += ROW_ABC;
 
 		write!(f, "{out}")
 	}
