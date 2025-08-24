@@ -1,5 +1,5 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(i8)]
+#[repr(u8)]
 pub enum PieceType {
 	Pawn,
 	Knight,
@@ -10,7 +10,7 @@ pub enum PieceType {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(i8)]
+#[repr(u8)]
 pub enum Color {
 	White = 0b00000000,
 	Black = 0b00001000,
@@ -19,14 +19,14 @@ pub enum Color {
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct Piece {
-	piece: i8,
+	piece: u8,
 	position: u8,
 }
 
 impl Piece {
 	pub fn new(pt: PieceType, col: Color) -> Self {
 		Self {
-			piece: pt as i8 | col as i8,
+			piece: pt as u8 | col as u8,
 			position: 0,
 		}
 	}
@@ -51,7 +51,7 @@ impl Piece {
 		}
 	}
 
-	pub fn get_i8(&self) -> i8 {
+	pub fn get_i8(&self) -> u8 {
 		self.piece
 	}
 
