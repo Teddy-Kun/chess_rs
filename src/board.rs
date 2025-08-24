@@ -69,19 +69,23 @@ impl Default for Board {
 }
 
 impl Board {
-	fn coords_to_index(x: u8, y: u8) -> Option<usize> {
+	fn coords_to_index(x: u8, y: u8) -> Option<u8> {
 		if x < 8 && y < 8 {
-			let y = (y as i8 - 7).abs();
-			Some((y as usize) * 8 + (x as usize))
+			let y = (y as i8 - 7).abs() as u8;
+			Some(y * 8 + x)
 		} else {
 			None
 		}
 	}
 
-	pub fn notation_to_index(x: char, y: u8) -> Option<usize> {
+	pub fn notation_to_x(x: char) -> Option<u8> {
+		let x = (x as u8).wrapping_sub(97);
+		if x < 8 { Some(x) } else { None }
+	}
+
+	pub fn notation_to_index(x: char, y: u8) -> Option<u8> {
 		// convert 'a' into 0. We don't care if any overflow or anything else occurs here. If its anything but 'a'-'h' it should just return a none
-		let x_num = x as u8;
-		let x = x_num.wrapping_sub(97);
+		let x = (x as u8).wrapping_sub(97);
 		Self::coords_to_index(x, y - 1)
 	}
 
@@ -269,7 +273,7 @@ impl Board {
 
 	pub fn get_at_position(&self, x: u8, y: u8) -> Option<Piece> {
 		let index = Self::coords_to_index(x, y)?;
-		let piece = self.board[index];
+		let piece = self.board[index as usize];
 
 		let color = piece.get_color()?;
 		let index = piece.get();
