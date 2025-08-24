@@ -58,8 +58,8 @@ impl Default for BoardOption {
 pub struct Board {
 	board: [BoardOption; 64],
 
-	white: [Piece; 16],
-	black: [Piece; 16],
+	white: Vec<Piece>,
+	black: Vec<Piece>,
 }
 
 impl Default for Board {
@@ -71,16 +71,59 @@ impl Default for Board {
 impl Board {
 	fn coords_to_index(x: u8, y: u8) -> Option<usize> {
 		if x < 8 && y < 8 {
+			let y = (y as i8 - 7).abs();
 			Some((y as usize) * 8 + (x as usize))
 		} else {
 			None
 		}
 	}
 
+	pub fn notation_to_index(x: char, y: u8) -> Option<usize> {
+		// convert 'a' into 0. We don't care if any overflow or anything else occurs here. If its anything but 'a'-'h' it should just return a none
+		let x_num = x as u8;
+		let x = x_num.wrapping_sub(97);
+		Self::coords_to_index(x, y - 1)
+	}
+
+	pub fn empty() -> Self {
+		Board {
+			board: [BoardOption::default(); 64],
+			white: Vec::with_capacity(16),
+			black: Vec::with_capacity(16),
+		}
+	}
+
+	pub fn add_piece(&mut self, piece: Piece) -> Option<()> {
+		let pos = piece.get_position();
+		// ignore illegal positions
+		if pos > 63 {
+			return None;
+		}
+
+		let on_board = self.board[pos as usize];
+
+		// only allow insertion on empty squares
+		if !on_board.is_none() {
+			return None;
+		}
+
+		let col = piece.get_color();
+		let arr = match col {
+			Color::Black => &mut self.black,
+			Color::White => &mut self.white,
+		};
+
+		self.board[pos as usize] = BoardOption::new(arr.len() as u8, col);
+
+		arr.push(piece);
+
+		Some(())
+	}
+
 	pub fn new() -> Self {
 		let mut board: [BoardOption; 64] = [BoardOption::default(); 64];
-		let white: [Piece; 16];
-		let black: [Piece; 16];
+		let white: Vec<Piece>;
+		let black: Vec<Piece>;
 
 		// init white pieces
 		{
@@ -132,7 +175,7 @@ impl Board {
 			let mut w_pawn_8 = w_pawn;
 			w_pawn_8.force_position(48);
 
-			white = [
+			white = vec![
 				w_rook, w_knight, w_bishop, w_queen, w_king, w_bishop_2, w_knight_2, w_rook_2,
 				w_pawn, w_pawn_2, w_pawn_3, w_pawn_4, w_pawn_5, w_pawn_6, w_pawn_7, w_pawn_8,
 			];
@@ -188,7 +231,7 @@ impl Board {
 			let mut b_pawn_8 = b_pawn;
 			b_pawn_8.force_position(15);
 
-			black = [
+			black = vec![
 				b_rook, b_knight, b_bishop, b_queen, b_king, b_bishop_2, b_knight_2, b_rook_2,
 				b_pawn, b_pawn_2, b_pawn_3, b_pawn_4, b_pawn_5, b_pawn_6, b_pawn_7, b_pawn_8,
 			];
