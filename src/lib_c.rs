@@ -1,5 +1,5 @@
 use crate::{
-	board::Board,
+	// board::Board,
 	piece::{Color, Piece, PieceType},
 };
 
@@ -13,7 +13,7 @@ pub extern "C" fn get_type(piece: &Piece) -> PieceType {
 	piece.get_type()
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn new_board() -> Board {
-	Board::new()
-}
+// #[unsafe(no_mangle)]
+// pub extern "C" fn new_board() -> Board {
+// 	Board::new()
+// }
