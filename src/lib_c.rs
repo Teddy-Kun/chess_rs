@@ -1,4 +1,7 @@
-use crate::{board::Board, piece::{Color, Piece, PieceType}};
+use crate::{
+	board::Board,
+	piece::{Color, Piece, PieceType},
+};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn get_color(piece: &Piece) -> Color {

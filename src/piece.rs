@@ -67,16 +67,16 @@ impl Piece {
 impl From<Piece> for char {
 	fn from(value: Piece) -> Self {
 		let c = match value.get_type() {
-			PieceType::Pawn => 'p',
-			PieceType::Knight => 'n',
-			PieceType::Bishop => 'b',
-			PieceType::Rook => 'r',
-			PieceType::Queen => 'q',
-			PieceType::King => 'k',
+			PieceType::Pawn => '♙',
+			PieceType::Knight => '♘',
+			PieceType::Bishop => '♗',
+			PieceType::Rook => '♖',
+			PieceType::Queen => '♕',
+			PieceType::King => '♔',
 		};
 
 		match value.get_color() {
-			Color::Black => c.to_ascii_uppercase(),
+			Color::Black => unsafe { char::from_u32_unchecked(c as u32 + 6) },
 			Color::White => c,
 		}
 	}
