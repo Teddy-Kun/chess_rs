@@ -1,3 +1,22 @@
+use std::{error::Error, fmt::Display};
+
+#[derive(Debug)]
+pub struct PieceTypeError {
+	invalid_char: char,
+}
+
+impl Display for PieceTypeError {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(
+			f,
+			"'{}' is not valid chess piece notation",
+			self.invalid_char
+		)
+	}
+}
+
+impl Error for PieceTypeError {}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum PieceType {
@@ -7,6 +26,24 @@ pub enum PieceType {
 	Rook,
 	Queen,
 	King,
+}
+
+impl TryFrom<char> for PieceType {
+	type Error = PieceTypeError;
+
+	fn try_from(value: char) -> Result<Self, Self::Error> {
+		match value.to_ascii_lowercase() {
+			'P' => Ok(PieceType::Pawn),
+			'N' => Ok(PieceType::Knight),
+			'B' => Ok(PieceType::Bishop),
+			'R' => Ok(PieceType::Rook),
+			'Q' => Ok(PieceType::Queen),
+			'K' => Ok(PieceType::King),
+			_ => Err(PieceTypeError {
+				invalid_char: value,
+			}),
+		}
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,6 +58,7 @@ pub enum Color {
 pub struct Piece {
 	piece: u8,
 	position: u8,
+	has_moved: bool,
 }
 
 impl Piece {
@@ -28,6 +66,7 @@ impl Piece {
 		Self {
 			piece: pt as u8 | col as u8,
 			position: 0,
+			has_moved: false,
 		}
 	}
 
@@ -53,6 +92,12 @@ impl Piece {
 
 	pub fn get_i8(&self) -> u8 {
 		self.piece
+	}
+
+	pub fn try_to_move(&mut self, target: u8) {
+		// TODO: check if the move is legal
+		self.has_moved = true;
+		self.force_position(target);
 	}
 
 	pub fn force_position(&mut self, position: u8) {
