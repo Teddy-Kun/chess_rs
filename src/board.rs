@@ -1,6 +1,9 @@
 use std::fmt::Display;
 
-use crate::piece::{Color, Piece, PieceType};
+use crate::{
+	board_hash::BoardHash,
+	piece::{Color, Piece, PieceType},
+};
 
 #[repr(transparent)]
 #[derive(Debug, Copy, Clone)]
@@ -60,6 +63,8 @@ pub struct Board {
 
 	white: Vec<Piece>,
 	black: Vec<Piece>,
+
+	debug_spots: BoardHash,
 }
 
 impl Default for Board {
@@ -71,7 +76,7 @@ impl Default for Board {
 impl Board {
 	fn coords_to_index(x: u8, y: u8) -> Option<u8> {
 		if x < 8 && y < 8 {
-			let y = (y as i8 - 7).abs() as u8;
+			let y = (y as i8 - 7).unsigned_abs();
 			Some(y * 8 + x)
 		} else {
 			None
@@ -94,6 +99,7 @@ impl Board {
 			board: [BoardOption::default(); 64],
 			white: Vec::with_capacity(16),
 			black: Vec::with_capacity(16),
+			debug_spots: BoardHash::new(),
 		}
 	}
 
@@ -258,6 +264,7 @@ impl Board {
 			board,
 			white,
 			black,
+			debug_spots: BoardHash::new(),
 		}
 	}
 
@@ -283,6 +290,19 @@ impl Board {
 			Color::White => Some(self.white[index as usize]),
 		}
 	}
+
+	pub fn castle(far: bool) -> bool {
+		// TODO
+		false
+	}
+
+	pub fn insert_debug_spot(&mut self, cell: u8) {
+		self.debug_spots.insert(cell);
+	}
+
+	pub fn remove_debug_spot(&mut self, cell: u8) {
+		self.debug_spots.remove(cell);
+	}
 }
 
 impl Display for Board {
@@ -293,10 +313,14 @@ impl Display for Board {
 			let mut piece_chars: [char; 8] = [' '; 8];
 
 			for (i, elem) in row.iter().enumerate() {
+				let cell_index: u8 = i as u8 + (row_i as u8 * 8);
 				let piece = self.get_from_option(**elem);
-				let ch: char = match piece {
-					None => continue,
-					Some(p) => p.into(),
+				let ch: char = match self.debug_spots.contains(cell_index) {
+					true => 'x',
+					false => match piece {
+						None => continue,
+						Some(p) => p.into(),
+					},
 				};
 
 				piece_chars[i] = ch;
