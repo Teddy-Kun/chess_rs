@@ -10,8 +10,7 @@ impl BoardHash {
 	}
 
 	pub fn contains(&self, v: u8) -> bool {
-		let res = self.hash & 1 << (v % 64);
-		res > 0
+		(self.hash & 1 << (v % 64)) != 0
 	}
 
 	pub fn insert(&mut self, v: u8) {
@@ -20,8 +19,7 @@ impl BoardHash {
 
 	pub fn remove(&mut self, v: u8) {
 		// Create a mask with a 1 at position 'v',
-		// then invert it to get a 0 at position 'v' and 1s everywhere else.
-		// The bitwise AND operation will then set the target bit to 0.
+		// then invert it to get a 0 at position 'v' and 1s everywhere else
 		self.hash &= !(1 << (v % 64));
 	}
 }
