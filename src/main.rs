@@ -1,9 +1,20 @@
-use chess_rs::{board::Board, notation, piece::Color};
+use chess_rs::{
+	board::Board,
+	piece::{Color, Piece, PieceType},
+};
 
 fn main() {
-	let board = Board::new();
-	let m = notation::parse_notation("Pc2c3", Color::White);
-	println!("{m:?}");
+	let mut board = Board::empty();
+	// let m = notation::parse_notation("Pc2c3", Color::White);
+	// println!("{m:?}");
+
+	let mut debug_queen = Piece::new(PieceType::Queen, Color::Black);
+	debug_queen.force_position(Board::notation_to_index('b', 2).unwrap());
+	board.add_piece(debug_queen);
+
+	for l_move in debug_queen.get_legal_moves() {
+		board.insert_debug_spot(l_move);
+	}
 
 	println!("{board}");
 }
