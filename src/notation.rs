@@ -1,5 +1,3 @@
-use std::u8;
-
 use bitflags::bitflags;
 
 use crate::{
@@ -52,7 +50,7 @@ fn get_index_from_chars(chars: [char; 2]) -> Option<u8> {
 	let x = chars[0];
 	let y = chars[1].to_digit(9)? as u8;
 
-	let index = Board::notation_to_index(x, y)? as u8;
+	let index = Board::notation_to_index(x, y)?;
 	Some(index)
 }
 
@@ -64,7 +62,7 @@ pub fn start_notation(notation: &str, col: Color) -> Option<Board> {
 			return None;
 		}
 
-		let chars: [char; 3] = piece_str.chars().collect::<Vec<char>>().try_into().unwrap();
+		let chars: [char; 3] = piece_str.chars().collect::<Vec<char>>().try_into().ok()?;
 		let ptype = PieceType::try_from(chars[0]).ok()?;
 
 		let index = get_index_from_chars([chars[1], chars[2]])?;
@@ -95,7 +93,7 @@ pub fn parse_notation(notation: &str, color: Color) -> Option<Move> {
 		};
 
 		if castle_check == "0-0" {
-			let index = Board::notation_to_index('g', start_row).unwrap() as u8;
+			let index = Board::notation_to_index('g', start_row).unwrap();
 
 			return Some(Move::Castle(
 				MoveData {
@@ -107,7 +105,7 @@ pub fn parse_notation(notation: &str, color: Color) -> Option<Move> {
 				index,
 			));
 		} else if castle_check == "0-0-0" {
-			let index = Board::notation_to_index('c', start_row).unwrap() as u8;
+			let index = Board::notation_to_index('c', start_row).unwrap();
 			return Some(Move::Castle(
 				MoveData {
 					x: Some('e'),
@@ -154,7 +152,7 @@ pub fn parse_notation(notation: &str, color: Color) -> Option<Move> {
 		chars = notation.chars().collect();
 	}
 
-	let last = chars.last().unwrap().clone();
+	let last = *chars.last().unwrap();
 	if let Ok(p) = PieceType::try_from(last) {
 		match p {
 			PieceType::Knight => special.set(SpecialMove::PROMOTE_KNIGHT, true),
@@ -194,29 +192,29 @@ pub fn parse_notation(notation: &str, color: Color) -> Option<Move> {
 				}
 			}
 			None => {
-				if let Some(_) = Board::notation_to_x(*char) {
-					if let Some(temp_x_data) = temp_x {
-						if data.x.is_none() {
-							data.x = Some(temp_x_data);
-							temp_x = Some(*char);
-						} else {
-							return None;
-						}
-					} else {
+				if Board::notation_to_x(*char).is_some()
+					&& let Some(temp_x_data) = temp_x
+				{
+					if data.x.is_none() {
+						data.x = Some(temp_x_data);
 						temp_x = Some(*char);
+					} else {
+						return None;
 					}
+				} else {
+					temp_x = Some(*char);
 				}
 				// we ignore other illegal characters, those might be actually garbage, but we also have stuff like 'x' for capturing
 			}
 		}
 	}
 
-	if let Some(x) = temp_x {
-		if let Some(y) = temp_y {
-			// we need both an x and a y so that the move done has a valid target
-			index = Board::notation_to_index(x, y)?;
-		}
-	} 
+	if let Some(x) = temp_x
+		&& let Some(y) = temp_y
+	{
+		// we need both an x and a y so that the move done has a valid target
+		index = Board::notation_to_index(x, y)?;
+	}
 
 	if index == u8::MAX {
 		return None;
