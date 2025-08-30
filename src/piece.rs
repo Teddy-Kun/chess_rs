@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display};
 
+use crate::board_hash::BoardHash;
+
 #[derive(Debug)]
 pub struct PieceTypeError {
 	invalid_char: char,
@@ -95,7 +97,7 @@ impl Piece {
 	}
 
 	pub fn try_to_move(&mut self, target: u8) -> bool {
-		if self.get_legal_moves().contains(&target) {
+		if self.get_legal_moves().contains(target) {
 			self.has_moved = true;
 			self.force_position(target);
 			true
@@ -112,7 +114,7 @@ impl Piece {
 		self.position
 	}
 
-	pub fn get_legal_moves(&self) -> Vec<u8> {
+	pub fn get_legal_moves(&self) -> BoardHash {
 		// TODO: consider captures somehow
 		match self.get_type() {
 			PieceType::Pawn => chk_move_pawn(self.get_position(), self.get_color(), self.has_moved),
@@ -130,11 +132,11 @@ fn piece_checked_add(current_pos: u8, target_pos: u8) -> Option<u8> {
 	if maybe > 63 { None } else { Some(maybe) }
 }
 
-fn chk_move_pawn(current_pos: u8, color: Color, has_moved: bool) -> Vec<u8> {
-	let mut res = Vec::new();
+fn chk_move_pawn(current_pos: u8, color: Color, has_moved: bool) -> BoardHash {
+	let mut res = BoardHash::new();
 
 	if !has_moved {
-		res.push(match color {
+		res.insert(match color {
 			// can be unchecked since we have not moved
 			Color::White => current_pos - 16,
 			Color::Black => current_pos + 16,
@@ -147,7 +149,7 @@ fn chk_move_pawn(current_pos: u8, color: Color, has_moved: bool) -> Vec<u8> {
 	};
 
 	if let Some(legal) = maybe {
-		res.push(legal);
+		res.insert(legal);
 	}
 
 	// TODO: check taking and fucking en passant
@@ -155,46 +157,46 @@ fn chk_move_pawn(current_pos: u8, color: Color, has_moved: bool) -> Vec<u8> {
 	res
 }
 
-fn chk_move_knight(current_pos: u8) -> Vec<u8> {
-	let mut res = Vec::new();
+fn chk_move_knight(current_pos: u8) -> BoardHash {
+	let mut res = BoardHash::new();
 
 	if let Some(top_left) = current_pos.checked_sub(17) {
-		res.push(top_left);
+		res.insert(top_left);
 	};
 
 	if let Some(top_right) = current_pos.checked_sub(15) {
-		res.push(top_right);
+		res.insert(top_right);
 	};
 
 	if let Some(bottom_left) = piece_checked_add(current_pos, 17) {
-		res.push(bottom_left);
+		res.insert(bottom_left);
 	};
 
 	if let Some(bottom_right) = piece_checked_add(current_pos, 15) {
-		res.push(bottom_right);
+		res.insert(bottom_right);
 	};
 
 	if let Some(high_left) = current_pos.checked_sub(10) {
-		res.push(high_left);
+		res.insert(high_left);
 	};
 
 	if let Some(high_right) = current_pos.checked_sub(6) {
-		res.push(high_right);
+		res.insert(high_right);
 	};
 
 	if let Some(low_left) = piece_checked_add(current_pos, 6) {
-		res.push(low_left);
+		res.insert(low_left);
 	};
 
 	if let Some(low_right) = piece_checked_add(current_pos, 10) {
-		res.push(low_right);
+		res.insert(low_right);
 	};
 
 	res
 }
 
-fn chk_move_bishop(current_pos: u8) -> Vec<u8> {
-	let mut res = Vec::new();
+fn chk_move_bishop(current_pos: u8) -> BoardHash {
+	let mut res = BoardHash::new();
 
 	// top left
 	let mut check_next = current_pos;
@@ -207,7 +209,7 @@ fn chk_move_bishop(current_pos: u8) -> Vec<u8> {
 				if next_row == current_pos / 8 || next_row.abs_diff(prev / 8) != 1 {
 					break;
 				}
-				res.push(next);
+				res.insert(next);
 				check_next = next;
 			}
 		}
@@ -224,7 +226,7 @@ fn chk_move_bishop(current_pos: u8) -> Vec<u8> {
 				if next_row == current_pos / 8 || next_row.abs_diff(prev / 8) != 1 {
 					break;
 				}
-				res.push(next);
+				res.insert(next);
 				check_next = next;
 			}
 		}
@@ -241,7 +243,7 @@ fn chk_move_bishop(current_pos: u8) -> Vec<u8> {
 				if next_row == current_pos / 8 || next_row.abs_diff(prev / 8) != 1 {
 					break;
 				}
-				res.push(next);
+				res.insert(next);
 				check_next = next;
 			}
 		}
@@ -258,7 +260,7 @@ fn chk_move_bishop(current_pos: u8) -> Vec<u8> {
 				if next_row == current_pos / 8 || next_row.abs_diff(prev / 8) != 1 {
 					break;
 				}
-				res.push(next);
+				res.insert(next);
 				check_next = next;
 			}
 		}
@@ -267,8 +269,8 @@ fn chk_move_bishop(current_pos: u8) -> Vec<u8> {
 	res
 }
 
-fn chk_move_rook(current_pos: u8) -> Vec<u8> {
-	let mut res = Vec::new();
+fn chk_move_rook(current_pos: u8) -> BoardHash {
+	let mut res = BoardHash::new();
 
 	let current_row = current_pos % 8;
 	println!("current_row {current_row}");
@@ -285,7 +287,7 @@ fn chk_move_rook(current_pos: u8) -> Vec<u8> {
 			break;
 		}
 
-		res.push(next);
+		res.insert(next);
 	}
 
 	next = current_pos;
@@ -301,7 +303,7 @@ fn chk_move_rook(current_pos: u8) -> Vec<u8> {
 			break;
 		}
 
-		res.push(next);
+		res.insert(next);
 	}
 
 	next = current_pos;
@@ -310,7 +312,7 @@ fn chk_move_rook(current_pos: u8) -> Vec<u8> {
 			Some(n) => n,
 			None => break,
 		};
-		res.push(next);
+		res.insert(next);
 	}
 
 	next = current_pos;
@@ -319,52 +321,52 @@ fn chk_move_rook(current_pos: u8) -> Vec<u8> {
 			Some(n) => n,
 			None => break,
 		};
-		res.push(next);
+		res.insert(next);
 	}
 
 	res
 }
 
-fn chk_move_queen(current_pos: u8) -> Vec<u8> {
+fn chk_move_queen(current_pos: u8) -> BoardHash {
 	let mut moves = chk_move_bishop(current_pos);
-	moves.append(&mut chk_move_rook(current_pos));
+	moves.union(chk_move_rook(current_pos));
 	moves
 }
 
-fn chk_move_king(current_pos: u8) -> Vec<u8> {
+fn chk_move_king(current_pos: u8) -> BoardHash {
 	// for efficiency reasons castling should be checked on the board
 
-	let mut res = Vec::new();
+	let mut res = BoardHash::new();
 	if let Some(bottom_left) = piece_checked_add(current_pos, 7) {
-		res.push(bottom_left);
+		res.insert(bottom_left);
 	};
 
 	if let Some(bottom) = piece_checked_add(current_pos, 8) {
-		res.push(bottom);
+		res.insert(bottom);
 	};
 
 	if let Some(bottom_right) = piece_checked_add(current_pos, 9) {
-		res.push(bottom_right);
+		res.insert(bottom_right);
 	};
 
 	if let Some(left) = current_pos.checked_sub(1) {
-		res.push(left);
+		res.insert(left);
 	};
 
 	if let Some(right) = piece_checked_add(current_pos, 1) {
-		res.push(right);
+		res.insert(right);
 	};
 
 	if let Some(top_left) = current_pos.checked_sub(9) {
-		res.push(top_left);
+		res.insert(top_left);
 	};
 
 	if let Some(top) = current_pos.checked_sub(8) {
-		res.push(top);
+		res.insert(top);
 	};
 
 	if let Some(top_right) = current_pos.checked_sub(7) {
-		res.push(top_right);
+		res.insert(top_right);
 	};
 
 	res

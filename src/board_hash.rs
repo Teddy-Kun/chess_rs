@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct BoardHash {
 	hash: u64,
@@ -22,6 +22,55 @@ impl BoardHash {
 		// then invert it to get a 0 at position 'v' and 1s everywhere else
 		self.hash &= !(1 << (v % 64));
 	}
+
+	pub fn iter(&self) -> BoardHashIter {
+        BoardHashIter {
+            remaining: self.hash,
+        }
+    }
+
+	pub fn is_empty(&self) -> bool {
+		self.hash == 0
+	}
+
+	pub fn union(&mut self, other: BoardHash) {
+		self.hash |= other.hash;
+	}
+}
+
+pub struct BoardHashIter {
+    remaining: u64,
+}
+
+impl Iterator for BoardHashIter {
+    type Item = u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining == 0 {
+            return None;
+        }
+
+        let tz = self.remaining.trailing_zeros(); // 0..=63
+        self.remaining &= !(1_u64 << tz);
+        Some(tz as u8)
+    }
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let cnt = self.remaining.count_ones() as usize;
+        (cnt, Some(cnt))
+    }
+}
+
+impl ExactSizeIterator for BoardHashIter {}
+
+impl IntoIterator for BoardHash {
+    type Item = u8;
+    type IntoIter = BoardHashIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        BoardHashIter {
+            remaining: self.hash,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -42,5 +91,10 @@ mod tests {
 		hasher.remove(1);
 
 		assert_eq!(hasher.contains(1), false);
+
+		
+		let v: Vec<u8> = hasher.into_iter().collect();
+
+		assert_eq!(v.len(), 61)
 	}
 }
