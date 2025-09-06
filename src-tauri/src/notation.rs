@@ -2,7 +2,7 @@ use bitflags::bitflags;
 
 use crate::{
 	board::Board,
-	piece::{Color, Piece, PieceType},
+	piece::{ChessCell, Color, Moved, PieceType},
 };
 
 bitflags! {
@@ -67,10 +67,9 @@ pub fn start_notation(notation: &str, col: Color) -> Option<Board> {
 
 		let index = get_index_from_chars([chars[1], chars[2]])?;
 
-		let mut piece = Piece::new(ptype, col);
-		piece.force_position(index);
+		let piece = ChessCell::with_piece(ptype, col, Moved::No);
 
-		board.add_piece(piece);
+		board.add_piece(piece, index);
 	}
 
 	Some(board)

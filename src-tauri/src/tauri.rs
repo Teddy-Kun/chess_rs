@@ -2,7 +2,7 @@
 
 use std::sync::{LazyLock, RwLock};
 
-use chess_rs_lib::{board::Board, board_hash::BoardHash, piece::Piece};
+use chess_rs_lib::{bitboard::BitBoard, board::Board, piece::ChessCell};
 
 static BOARD_STATE: LazyLock<RwLock<Board>> = LazyLock::new(|| RwLock::new(Board::new()));
 
@@ -12,27 +12,26 @@ fn greet(name: &str) -> String {
 }
 
 #[tauri::command]
-fn get_board() -> Box<[Piece]> {
+fn get_board() -> Box<[ChessCell]> {
 	BOARD_STATE.read().unwrap().get_pieces()
 }
 
 #[tauri::command]
-fn get_legal_moves(index: u8) -> BoardHash {
-	match BOARD_STATE.read().unwrap().get_at_index(index) {
-		None => BoardHash::new(),
-		Some(piece) => piece.get_legal_moves(),
-	}
+fn get_legal_moves(index: u8) -> BitBoard {
+	// TODO
+	BitBoard::new()
 }
 
 #[tauri::command]
-fn move_piece(index: u8, target: u8) -> Box<[Piece]> {
-	let mut board = BOARD_STATE.write().unwrap();
-	board.force_move_piece(index, target);
+fn move_piece(index: u8, target: u8) -> Box<[ChessCell]> {
+	// TODO
+	let board = BOARD_STATE.write().unwrap();
+	// board.force_move_piece(index, target);
 	board.get_pieces()
 }
 
 #[tauri::command]
-fn restart() -> Box<[Piece]> {
+fn restart() -> Box<[ChessCell]> {
 	let mut board = BOARD_STATE.write().unwrap();
 	board.reset();
 	board.get_pieces()

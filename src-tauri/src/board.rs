@@ -1,70 +1,15 @@
-use std::fmt::Display;
+use std::ops::Index;
 
 use crate::{
-	board_hash::BoardHash,
-	piece::{Color, Piece, PieceType},
+	bitboard::BitBoard,
+	piece::{ChessCell, Color, Moved, PieceType},
 };
 
-#[repr(transparent)]
-#[derive(Debug, Copy, Clone)]
-// Index into the White or Black array of the board
-struct BoardOption(u8);
-
-impl BoardOption {
-	pub const NONE: u8 = u8::MAX;
-	const BLACK_FLAG: u8 = 0b01000000;
-
-	pub fn new(inner: u8, col: Color) -> Self {
-		if inner >= 16 {
-			return Self(Self::NONE);
-		}
-
-		match col {
-			Color::White => Self(inner),
-			Color::Black => Self(inner | Self::BLACK_FLAG),
-		}
-	}
-
-	fn is_none(&self) -> bool {
-		self.0 == Self::NONE
-	}
-
-	fn get_color(&self) -> Option<Color> {
-		if self.is_none() {
-			return None;
-		}
-
-		if (self.0 & Self::BLACK_FLAG) > 0 {
-			Some(Color::Black)
-		} else {
-			Some(Color::White)
-		}
-	}
-
-	fn get(&self) -> u8 {
-		if self.is_none() {
-			Self::NONE
-		} else {
-			self.0 & 0b10111111 // strip black flag
-		}
-	}
-}
-
-impl Default for BoardOption {
-	fn default() -> Self {
-		Self(Self::NONE)
-	}
-}
-
 #[repr(C)]
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Board {
-	board: [BoardOption; 64],
-
-	white: Vec<Piece>,
-	black: Vec<Piece>,
-
-	debug_spots: BoardHash,
+	board: [ChessCell; 64],
+	occupation: BitBoard,
 }
 
 impl Default for Board {
@@ -96,319 +41,148 @@ impl Board {
 
 	pub fn empty() -> Self {
 		Board {
-			board: [BoardOption::default(); 64],
-			white: Vec::with_capacity(16),
-			black: Vec::with_capacity(16),
-			debug_spots: BoardHash::new(),
+			board: [ChessCell::default(); 64],
+			occupation: BitBoard::new(),
 		}
 	}
 
-	pub fn add_piece(&mut self, piece: Piece) -> Option<()> {
-		let pos = piece.get_position();
-		// ignore illegal positions
-		if pos > 63 {
-			return None;
-		}
-
-		let on_board = self.board[pos as usize];
-
-		// only allow insertion on empty squares
-		if !on_board.is_none() {
-			return None;
-		}
-
-		let col = piece.get_color();
-		let arr = match col {
-			Color::Black => &mut self.black,
-			Color::White => &mut self.white,
-		};
-
-		self.board[pos as usize] = BoardOption::new(arr.len() as u8, col);
-
-		arr.push(piece);
-
-		Some(())
+	pub fn add_piece(&mut self, piece: ChessCell, position: u8) {
+		self.board[position as usize] = piece;
+		self.occupation.insert(position);
 	}
 
 	pub fn new() -> Self {
-		let mut board: [BoardOption; 64] = [BoardOption::default(); 64];
-		let white: Vec<Piece>;
-		let black: Vec<Piece>;
-
+		let mut board: [ChessCell; 64] = [ChessCell::default(); 64];
 		// init white pieces
 		{
-			let mut w_rook = Piece::new(PieceType::Rook, Color::White);
-			w_rook.force_position(63);
+			let w_rook = ChessCell::with_piece(PieceType::Rook, Color::White, Moved::No);
+			board[63] = w_rook;
 
-			let mut w_knight = Piece::new(PieceType::Knight, Color::White);
-			w_knight.force_position(62);
+			let w_knight = ChessCell::with_piece(PieceType::Knight, Color::White, Moved::No);
+			board[62] = w_knight;
 
-			let mut w_bishop = Piece::new(PieceType::Bishop, Color::White);
-			w_bishop.force_position(61);
+			let w_bishop = ChessCell::with_piece(PieceType::Bishop, Color::White, Moved::No);
+			board[61] = w_bishop;
 
-			let mut w_queen = Piece::new(PieceType::Queen, Color::White);
-			w_queen.force_position(60);
+			let w_queen = ChessCell::with_piece(PieceType::Queen, Color::White, Moved::No);
+			board[60] = w_queen;
 
-			let mut w_king = Piece::new(PieceType::King, Color::White);
-			w_king.force_position(59);
+			let w_king = ChessCell::with_piece(PieceType::King, Color::White, Moved::No);
+			board[59] = w_king;
 
-			let mut w_bishop_2 = w_bishop;
-			w_bishop_2.force_position(58);
+			board[58] = w_bishop;
+			board[57] = w_knight;
+			board[56] = w_rook;
 
-			let mut w_knight_2 = w_knight;
-			w_knight_2.force_position(57);
-
-			let mut w_rook_2 = w_rook;
-			w_rook_2.force_position(56);
-
-			let mut w_pawn = Piece::new(PieceType::Pawn, Color::White);
-			w_pawn.force_position(55);
-
-			let mut w_pawn_2 = w_pawn;
-			w_pawn_2.force_position(54);
-
-			let mut w_pawn_3 = w_pawn;
-			w_pawn_3.force_position(53);
-
-			let mut w_pawn_4 = w_pawn;
-			w_pawn_4.force_position(52);
-
-			let mut w_pawn_5 = w_pawn;
-			w_pawn_5.force_position(51);
-
-			let mut w_pawn_6 = w_pawn;
-			w_pawn_6.force_position(50);
-
-			let mut w_pawn_7 = w_pawn;
-			w_pawn_7.force_position(49);
-
-			let mut w_pawn_8 = w_pawn;
-			w_pawn_8.force_position(48);
-
-			white = vec![
-				w_rook, w_knight, w_bishop, w_queen, w_king, w_bishop_2, w_knight_2, w_rook_2,
-				w_pawn, w_pawn_2, w_pawn_3, w_pawn_4, w_pawn_5, w_pawn_6, w_pawn_7, w_pawn_8,
-			];
+			let w_pawn = ChessCell::with_piece(PieceType::Pawn, Color::White, Moved::No);
+			board[55] = w_pawn;
+			board[54] = w_pawn;
+			board[53] = w_pawn;
+			board[52] = w_pawn;
+			board[51] = w_pawn;
+			board[50] = w_pawn;
+			board[49] = w_pawn;
+			board[48] = w_pawn;
 		}
 
 		// init black pieces
 		{
-			let mut b_rook = Piece::new(PieceType::Rook, Color::Black);
-			b_rook.force_position(0);
+			let w_rook = ChessCell::with_piece(PieceType::Rook, Color::Black, Moved::No);
+			board[0] = w_rook;
 
-			let mut b_knight = Piece::new(PieceType::Knight, Color::Black);
-			b_knight.force_position(1);
+			let w_knight = ChessCell::with_piece(PieceType::Knight, Color::Black, Moved::No);
+			board[1] = w_knight;
 
-			let mut b_bishop = Piece::new(PieceType::Bishop, Color::Black);
-			b_bishop.force_position(2);
+			let w_bishop = ChessCell::with_piece(PieceType::Bishop, Color::Black, Moved::No);
+			board[2] = w_bishop;
 
-			let mut b_king = Piece::new(PieceType::King, Color::Black);
-			b_king.force_position(3);
+			let w_queen = ChessCell::with_piece(PieceType::Queen, Color::Black, Moved::No);
+			board[3] = w_queen;
 
-			let mut b_queen = Piece::new(PieceType::Queen, Color::Black);
-			b_queen.force_position(4);
+			let w_king = ChessCell::with_piece(PieceType::King, Color::Black, Moved::No);
+			board[4] = w_king;
 
-			let mut b_bishop_2 = b_bishop;
-			b_bishop_2.force_position(5);
+			board[5] = w_bishop;
+			board[6] = w_knight;
+			board[7] = w_rook;
 
-			let mut b_knight_2 = b_knight;
-			b_knight_2.force_position(6);
-
-			let mut b_rook_2 = b_rook;
-			b_rook_2.force_position(7);
-
-			let mut b_pawn = Piece::new(PieceType::Pawn, Color::Black);
-			b_pawn.force_position(8);
-
-			let mut b_pawn_2 = b_pawn;
-			b_pawn_2.force_position(9);
-
-			let mut b_pawn_3 = b_pawn;
-			b_pawn_3.force_position(10);
-
-			let mut b_pawn_4 = b_pawn;
-			b_pawn_4.force_position(11);
-
-			let mut b_pawn_5 = b_pawn;
-			b_pawn_5.force_position(12);
-
-			let mut b_pawn_6 = b_pawn;
-			b_pawn_6.force_position(13);
-
-			let mut b_pawn_7 = b_pawn;
-			b_pawn_7.force_position(14);
-
-			let mut b_pawn_8 = b_pawn;
-			b_pawn_8.force_position(15);
-
-			black = vec![
-				b_rook, b_knight, b_bishop, b_queen, b_king, b_bishop_2, b_knight_2, b_rook_2,
-				b_pawn, b_pawn_2, b_pawn_3, b_pawn_4, b_pawn_5, b_pawn_6, b_pawn_7, b_pawn_8,
-			];
-		}
-
-		// assign board values
-		{
-			for (i, w) in white.iter().enumerate() {
-				let index = w.get_position() as usize;
-				board[index] = BoardOption::new(i as u8, Color::White);
-			}
-
-			for (i, b) in black.iter().enumerate() {
-				let index = b.get_position() as usize;
-				board[index] = BoardOption::new(i as u8, Color::Black);
-			}
+			let w_pawn = ChessCell::with_piece(PieceType::Pawn, Color::Black, Moved::No);
+			board[8] = w_pawn;
+			board[9] = w_pawn;
+			board[10] = w_pawn;
+			board[11] = w_pawn;
+			board[12] = w_pawn;
+			board[13] = w_pawn;
+			board[14] = w_pawn;
+			board[15] = w_pawn;
 		}
 
 		Self {
 			board,
-			white,
-			black,
-			debug_spots: BoardHash::new(),
+			occupation: BitBoard::from(
+				// this is the inital position of all pieces on the board
+				0b111111111111111000000000000000000000000000000001111111111111111,
+			),
 		}
 	}
 
 	pub fn reset(&mut self) {
 		let n = Self::new();
 		self.board = n.board;
-		self.black = n.black;
-		self.white = n.white;
-		self.debug_spots = n.debug_spots;
+		self.occupation = n.occupation;
 	}
 
-	fn get_from_option(&self, option: BoardOption) -> Option<Piece> {
-		let col = option.get_color()?; // auto returns None on empty cell
-		let index = option.get() as usize;
-
-		match col {
-			Color::Black => Some(self.black[index]),
-			Color::White => Some(self.white[index]),
-		}
+	pub fn get_at_position(&self, x: u8, y: u8) -> ChessCell {
+		let index = match Self::coords_to_index(x, y) {
+			Some(i) => i,
+			None => return ChessCell::new(),
+		};
+		self.board[index as usize]
 	}
 
-	pub fn get_at_position(&self, x: u8, y: u8) -> Option<Piece> {
-		let index = Self::coords_to_index(x, y)?;
-		self.get_at_index(index)
-	}
+	// pub fn force_move_piece(&mut self, index: u8, target: u8) {
+	// 	let piece = self.board[index as usize];
 
-	pub fn get_at_index(&self, index: u8) -> Option<Piece> {
-		let piece = self.board[index as usize];
+	// 	if let Some(color) = piece.get_color() {
+	// 		self.board[index as usize] = BoardOption::default();
+	// 		self.board[target as usize] = BoardOption::new(index, color);
+	// 		self.occupation.remove(index);
+	// 		self.occupation.insert(target);
+	// 		let index = piece.get();
+	// 		let piece = match color {
+	// 			Color::Black => &mut self.black[index as usize],
+	// 			Color::White => &mut self.white[index as usize],
+	// 		};
 
-		// this returns none if piece is none
-		let color = piece.get_color()?;
-		let index = piece.get();
+	// 		piece.force_position(target);
+	// 	}
+	// }
 
-		match color {
-			Color::Black => Some(self.black[index as usize]),
-			Color::White => Some(self.white[index as usize]),
-		}
-	}
+	// pub fn castle(far: bool) -> bool {
+	// 	// TODO
+	// 	false
+	// }
 
-	pub fn force_move_piece(&mut self, index: u8, target: u8) {
-		let piece = self.board[index as usize];
-
-		if let Some(color) = piece.get_color() {
-			self.board[index as usize] = BoardOption::default();
-			self.board[target as usize] = BoardOption::new(index, color);
-			let index = piece.get();
-			let piece = match color {
-				Color::Black => &mut self.black[index as usize],
-				Color::White => &mut self.white[index as usize],
-			};
-
-			piece.force_position(target);
-		}
-	}
-
-	pub fn castle(far: bool) -> bool {
-		// TODO
-		false
-	}
-
-	pub fn insert_debug_spot(&mut self, cell: u8) {
-		self.debug_spots.insert(cell);
-	}
-
-	pub fn remove_debug_spot(&mut self, cell: u8) {
-		self.debug_spots.remove(cell);
-	}
-
-	pub fn get_pieces(&self) -> Box<[Piece]> {
-		let mut pieces = self.white.clone();
-		pieces.append(&mut self.black.clone());
+	pub fn get_pieces(&self) -> Box<[ChessCell]> {
+		let pieces: Vec<ChessCell> = self
+			.board
+			.iter()
+			.filter_map(|c| match c.is_empty() {
+				true => None,
+				false => Some(*c),
+			})
+			.collect();
 		pieces.into_boxed_slice()
 	}
+
+	// pub fn get_legal_moves(&mut self, index: u8) -> BitBoard {
+	// 	BitBoard::new()
+	// }
 }
 
-impl Display for Board {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		const BORDER: &str = "  +-+-+-+-+-+-+-+-+";
-
-		let into_cell_row = |row: [&BoardOption; 8], row_i: usize| -> String {
-			let mut piece_chars: [char; 8] = [' '; 8];
-
-			for (i, elem) in row.iter().enumerate() {
-				let cell_index: u8 = i as u8 + (row_i as u8 * 8);
-				let piece = self.get_from_option(**elem);
-				let ch: char = match self.debug_spots.contains(cell_index) {
-					true => 'x',
-					false => match piece {
-						None => continue,
-						Some(p) => p.into(),
-					},
-				};
-
-				piece_chars[i] = ch;
-			}
-
-			let row_index = ((row_i as i8) - 8).abs();
-
-			format!(
-				"{} |{}|{}|{}|{}|{}|{}|{}|{}| {}\n",
-				row_index,
-				piece_chars[0],
-				piece_chars[1],
-				piece_chars[2],
-				piece_chars[3],
-				piece_chars[4],
-				piece_chars[5],
-				piece_chars[6],
-				piece_chars[7],
-				row_index,
-			)
-		};
-
-		let min_string = String::with_capacity(0);
-		let mut str_rows: [String; 8] = [
-			min_string.clone(),
-			min_string.clone(),
-			min_string.clone(),
-			min_string.clone(),
-			min_string.clone(),
-			min_string.clone(),
-			min_string.clone(),
-			min_string,
-		];
-
-		for (i, row) in self.board.iter().array_chunks::<8>().enumerate() {
-			str_rows[i] = into_cell_row(row, i);
-		}
-
-		let mut out = String::with_capacity(457);
-
-		const ROW_ABC: &str = "   a b c d e f g h";
-		out += ROW_ABC;
-		out.push('\n');
-
-		for row in str_rows {
-			out += BORDER;
-			out.push('\n');
-			out += row.as_str();
-		}
-		out += BORDER;
-		out.push('\n');
-		out += ROW_ABC;
-
-		write!(f, "{out}")
+impl Index<u8> for Board {
+	type Output = ChessCell;
+	fn index(&self, index: u8) -> &Self::Output {
+		&self.board[index as usize]
 	}
 }

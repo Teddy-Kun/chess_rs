@@ -2,13 +2,13 @@ use serde::Serialize;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
-pub struct BoardHash {
+pub struct BitBoard {
 	hash: u64,
 }
 
-impl BoardHash {
-	pub fn new() -> BoardHash {
-		BoardHash { hash: 0 }
+impl BitBoard {
+	pub fn new() -> BitBoard {
+		BitBoard { hash: 0 }
 	}
 
 	pub fn contains(&self, v: u8) -> bool {
@@ -35,7 +35,7 @@ impl BoardHash {
 		self.hash == 0
 	}
 
-	pub fn union(&mut self, other: BoardHash) {
+	pub fn union(&mut self, other: BitBoard) {
 		self.hash |= other.hash;
 	}
 }
@@ -64,7 +64,7 @@ impl Iterator for BoardHashIter {
 
 impl ExactSizeIterator for BoardHashIter {}
 
-impl IntoIterator for BoardHash {
+impl IntoIterator for BitBoard {
 	type Item = u8;
 	type IntoIter = BoardHashIter;
 
@@ -75,7 +75,13 @@ impl IntoIterator for BoardHash {
 	}
 }
 
-impl Serialize for BoardHash {
+impl From<u64> for BitBoard {
+	fn from(value: u64) -> Self {
+		BitBoard { hash: value }
+	}
+}
+
+impl Serialize for BitBoard {
 	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
 	where
 		S: serde::Serializer,
@@ -87,11 +93,11 @@ impl Serialize for BoardHash {
 
 #[cfg(test)]
 mod tests {
-	use crate::board_hash::BoardHash;
+	use crate::bitboard::BitBoard;
 
 	#[test]
 	fn test_board_hash() {
-		let mut hasher = BoardHash::new();
+		let mut hasher = BitBoard::new();
 
 		for i in 0..62 {
 			hasher.insert(i);
