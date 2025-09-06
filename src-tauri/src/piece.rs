@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display};
 
+use serde::{Serialize, ser::SerializeStruct};
+
 use crate::board_hash::BoardHash;
 
 #[derive(Debug)]
@@ -19,7 +21,7 @@ impl Display for PieceTypeError {
 
 impl Error for PieceTypeError {}
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[repr(u8)]
 pub enum PieceType {
 	Pawn,
@@ -48,7 +50,7 @@ impl TryFrom<char> for PieceType {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[repr(u8)]
 pub enum Color {
 	White = 0b00000000,
@@ -127,9 +129,37 @@ impl Piece {
 	}
 }
 
+impl Serialize for Piece {
+	fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+	where
+		S: serde::Serializer,
+	{
+		let color = self.get_color();
+		let pt = self.get_type();
+
+		let mut state = serializer.serialize_struct("Piece", 4)?;
+		state.serialize_field("type", &pt)?;
+		state.serialize_field("color", &color)?;
+		state.serialize_field("position", &self.position)?;
+		state.serialize_field("has_moved", &self.has_moved)?;
+		state.end()
+	}
+}
+
 fn piece_checked_add(current_pos: u8, target_pos: u8) -> Option<u8> {
 	let maybe = current_pos.checked_add(target_pos)?;
-	if maybe > 63 { None } else { Some(maybe) }
+	let definitely = if maybe > 63 { return None } else { maybe };
+
+	let (bigger, smaller) = if current_pos > target_pos {
+		(current_pos, target_pos)
+	} else {
+		(target_pos, current_pos)
+	};
+	if smaller >= 8 && bigger % 8 > definitely % 8 {
+		return None;
+	};
+
+	Some(definitely)
 }
 
 fn chk_move_pawn(current_pos: u8, color: Color, has_moved: bool) -> BoardHash {

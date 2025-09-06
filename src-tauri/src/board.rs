@@ -280,14 +280,35 @@ impl Board {
 
 	pub fn get_at_position(&self, x: u8, y: u8) -> Option<Piece> {
 		let index = Self::coords_to_index(x, y)?;
+		self.get_at_index(index)
+	}
+
+	pub fn get_at_index(&self, index: u8) -> Option<Piece> {
 		let piece = self.board[index as usize];
 
+		// this returns none if piece is none
 		let color = piece.get_color()?;
 		let index = piece.get();
 
 		match color {
 			Color::Black => Some(self.black[index as usize]),
 			Color::White => Some(self.white[index as usize]),
+		}
+	}
+
+	pub fn force_move_piece(&mut self, index: u8, target: u8) {
+		let piece = self.board[index as usize];
+
+		if let Some(color) = piece.get_color() {
+			self.board[index as usize] = BoardOption::default();
+			self.board[target as usize] = BoardOption::new(index, color);
+			let index = piece.get();
+			let piece = match color {
+				Color::Black => &mut self.black[index as usize],
+				Color::White => &mut self.white[index as usize],
+			};
+
+			piece.force_position(target);
 		}
 	}
 
@@ -302,6 +323,12 @@ impl Board {
 
 	pub fn remove_debug_spot(&mut self, cell: u8) {
 		self.debug_spots.remove(cell);
+	}
+
+	pub fn get_pieces(&self) -> Vec<Piece> {
+		let mut pieces = self.white.clone();
+		pieces.append(&mut self.black.clone());
+		pieces
 	}
 }
 

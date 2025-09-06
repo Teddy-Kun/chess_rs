@@ -1,24 +1,18 @@
 alias b := build
 alias r := run
+alias bw := build-win
 
 build:
-    cargo +nightly b -r -Z build-std
-    cbindgen --crate chess_rs --output target/release/libchess_rs.h --lang c
-
-build-dev:
-    cargo +nightly b -Z build-std
-    cbindgen --crate chess_rs --output target/debug/libchess_rs.h --lang c
+    bun tauri build --no-bundle -- -Z build-std
 
 run:
-    cargo +nightly r -r -Z build-std
-    cbindgen --crate chess_rs --output target/release/libchess_rs.h --lang c
+    bun tauri dev -- -Z build-std
 
-run-dev:
-    cargo +nightly r -Z build-std
-    cbindgen --crate chess_rs --output target/debug/libchess_rs.h --lang c
+build-win:
+    bun tauri build --runner cargo-xwin --target x86_64-pc-windows-msvc --no-bundle -- -Z build-std
 
 test:
-    cargo test
+    cd src-tauri && cargo test
 
 clean:
-    cargo clean
+    rm -r build && cd src-tauri && cargo clean
