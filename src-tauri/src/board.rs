@@ -268,6 +268,14 @@ impl Board {
 		}
 	}
 
+	pub fn reset(&mut self) {
+		let n = Self::new();
+		self.board = n.board;
+		self.black = n.black;
+		self.white = n.white;
+		self.debug_spots = n.debug_spots;
+	}
+
 	fn get_from_option(&self, option: BoardOption) -> Option<Piece> {
 		let col = option.get_color()?; // auto returns None on empty cell
 		let index = option.get() as usize;
@@ -325,10 +333,10 @@ impl Board {
 		self.debug_spots.remove(cell);
 	}
 
-	pub fn get_pieces(&self) -> Vec<Piece> {
+	pub fn get_pieces(&self) -> Box<[Piece]> {
 		let mut pieces = self.white.clone();
 		pieces.append(&mut self.black.clone());
-		pieces
+		pieces.into_boxed_slice()
 	}
 }
 

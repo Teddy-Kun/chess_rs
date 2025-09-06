@@ -52,3 +52,8 @@ export async function move_piece(index: number, target: number): Promise<BoardSt
 	const res = await invoke("move_piece", { index, target }) as BackendPiece[];
 	return convert_board_state(res);
 }
+
+export async function restart(): Promise<BoardState> {
+	const res = await invoke("restart") as BackendPiece[];
+	return convert_board_state(res);
+}

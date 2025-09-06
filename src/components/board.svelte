@@ -4,6 +4,7 @@
 		get_board,
 		get_legal_moves,
 		move_piece,
+		restart,
 		type BoardState,
 	} from "../lib";
 	import Piece from "./piece.svelte";
@@ -49,6 +50,12 @@
 		} else moves = null;
 	}
 
+	function reset(): void {
+		restart().then((res) => {
+			board = res;
+		});
+	}
+
 	onMount(() => {
 		get_board().then((state) => {
 			board = state;
@@ -56,6 +63,12 @@
 	});
 </script>
 
+<button
+	class="absolute top-4 left-4 text-white py-2 px-4 border border-border rounded-md hover:bg-gray-800 transition-colors cursor-pointer"
+	onclick={reset}
+>
+	Reset
+</button>
 <div class="m-8 grid grid-cols-10 font-bold text-xl text-white">
 	<p></p>
 	<p class={text_cls}>A</p>
