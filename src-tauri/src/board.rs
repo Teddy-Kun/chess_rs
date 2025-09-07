@@ -457,81 +457,50 @@ impl Board {
 		let own_col = piece.get_color();
 
 		if let Some(bottom_left) = Self::board_overflow_add(i, 7, true).get() {
-			if self.occupation.contains(bottom_left) {
-				if self[bottom_left].get_color() != own_col {
-					legal.insert(bottom_left);
-				}
-			} else {
+			if !self.occupation.contains(bottom_left) || self[bottom_left].get_color() != own_col {
 				legal.insert(bottom_left);
 			}
 		};
 
 		if let Some(bottom) = Self::board_overflow_add(i, 8, false).get() {
-			if self.occupation.contains(bottom) {
-				if self[bottom].get_color() != own_col {
-					legal.insert(bottom);
-				}
-			} else {
+			if !self.occupation.contains(bottom) || self[bottom].get_color() != own_col {
 				legal.insert(bottom);
 			}
 		};
 
 		if let Some(bottom_right) = Self::board_overflow_add(i, 9, true).get() {
-			if self.occupation.contains(bottom_right) {
-				if self[bottom_right].get_color() != own_col {
-					legal.insert(bottom_right);
-				}
-			} else {
+			if !self.occupation.contains(bottom_right) || self[bottom_right].get_color() != own_col
+			{
 				legal.insert(bottom_right);
 			}
 		};
 
 		if let Some(left) = Self::board_underflow_sub(i, 1, false).get() {
-			if self.occupation.contains(left) {
-				if self[left].get_color() != own_col {
-					legal.insert(left);
-				}
-			} else {
+			if !self.occupation.contains(left) || self[left].get_color() != own_col {
 				legal.insert(left);
 			}
 		};
 
 		if let Some(right) = Self::board_overflow_add(i, 1, false).get() {
-			if self.occupation.contains(right) {
-				if self[right].get_color() != own_col {
-					legal.insert(right);
-				}
-			} else {
+			if !self.occupation.contains(right) || self[right].get_color() != own_col {
 				legal.insert(right);
 			}
 		};
 
 		if let Some(top_left) = Self::board_underflow_sub(i, 9, true).get() {
-			if self.occupation.contains(top_left) {
-				if self[top_left].get_color() != own_col {
-					legal.insert(top_left);
-				}
-			} else {
+			if !self.occupation.contains(top_left) || self[top_left].get_color() != own_col {
 				legal.insert(top_left);
 			}
 		};
 
 		if let Some(top) = Self::board_underflow_sub(i, 8, false).get() {
-			if self.occupation.contains(top) {
-				if self[top].get_color() != own_col {
-					legal.insert(top);
-				}
-			} else {
+			if !self.occupation.contains(top) || self[top].get_color() != own_col {
 				legal.insert(top);
 			}
 		};
 
 		if let Some(top_right) = Self::board_underflow_sub(i, 7, true).get() {
-			if self.occupation.contains(top_right) {
-				if self[top_right].get_color() != own_col {
-					legal.insert(top_right);
-				}
-			} else {
+			if !self.occupation.contains(top_right) || self[top_right].get_color() != own_col {
 				legal.insert(top_right);
 			}
 		};
