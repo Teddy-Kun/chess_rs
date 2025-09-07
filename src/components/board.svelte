@@ -22,6 +22,7 @@
 			cls = adjusted % 2 === 1 ? "bg-green-800" : "bg-green-600";
 		} else cls = adjusted % 2 === 1 ? "bg-[#4b3015]" : "bg-[#ffcf9f]";
 		cls += " size-16 flex items-center justify-center";
+		if (moves?.index === i) cls += " border-2 border-red-500";
 		return cls;
 	}
 
