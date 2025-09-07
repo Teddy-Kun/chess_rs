@@ -1,27 +1,4 @@
-use std::{error::Error, fmt::Display, mem};
-
 use serde::{Serialize, ser::SerializeStruct};
-
-#[derive(Debug)]
-pub enum PieceTypeError {
-	InvalidChar(char),
-	InvalidU8(u8),
-}
-
-impl Display for PieceTypeError {
-	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		match self {
-			PieceTypeError::InvalidChar(ch) => {
-				write!(f, "'{}' is not valid chess piece notation", ch)
-			}
-			PieceTypeError::InvalidU8(u) => {
-				write!(f, "Cannot match {} to a PieceType", u)
-			}
-		}
-	}
-}
-
-impl Error for PieceTypeError {}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[repr(u8)]
@@ -35,7 +12,7 @@ pub enum PieceType {
 }
 
 impl TryFrom<u8> for PieceType {
-	type Error = PieceTypeError;
+	type Error = ();
 
 	fn try_from(value: u8) -> Result<Self, Self::Error> {
 		match value {
@@ -45,13 +22,13 @@ impl TryFrom<u8> for PieceType {
 			0b00000100 => Ok(PieceType::Rook),
 			0b00000101 => Ok(PieceType::Queen),
 			0b00000110 => Ok(PieceType::King),
-			_ => Err(PieceTypeError::InvalidU8(value)),
+			_ => Err(()),
 		}
 	}
 }
 
 impl TryFrom<char> for PieceType {
-	type Error = PieceTypeError;
+	type Error = ();
 
 	fn try_from(value: char) -> Result<Self, Self::Error> {
 		match value.to_ascii_lowercase() {
@@ -61,7 +38,7 @@ impl TryFrom<char> for PieceType {
 			'R' => Ok(PieceType::Rook),
 			'Q' => Ok(PieceType::Queen),
 			'K' => Ok(PieceType::King),
-			_ => Err(PieceTypeError::InvalidChar(value)),
+			_ => Err(()),
 		}
 	}
 }
