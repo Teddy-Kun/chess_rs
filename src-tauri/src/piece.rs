@@ -44,7 +44,7 @@ impl TryFrom<u8> for PieceType {
 			// # Safety
 			//
 			// Guaranteed to be safe due to the previous check if it is in the bounds of PieceType
-			Ok(unsafe { mem::transmute(value) })
+			Ok(unsafe { mem::transmute::<u8, PieceType>(value) })
 		}
 	}
 }

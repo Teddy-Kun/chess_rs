@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct BitBoard {
 	hash: u64,
@@ -35,8 +35,13 @@ impl BitBoard {
 		self.hash == 0
 	}
 
-	pub fn union(&mut self, other: BitBoard) {
-		self.hash |= other.hash;
+	pub fn union(&self, other: Self) -> Self {
+		let new = self.hash | other.hash;
+		Self { hash: new }
+	}
+
+	pub fn size(&self) -> u8 {
+		self.hash.count_ones() as u8
 	}
 }
 
