@@ -11,6 +11,7 @@
 
 	let board = $state<BoardState>({});
 	let moves = $state<{ index: number; moves: number[] } | null>(null);
+	let cell_size = $state(64);
 
 	function get_class(i: number): string {
 		// alternating colors
@@ -20,8 +21,8 @@
 
 		if (moves?.moves.includes(i)) {
 			cls = adjusted % 2 === 1 ? "bg-green-800" : "bg-green-600";
-		} else cls = adjusted % 2 === 1 ? "bg-[#4b3015]" : "bg-[#ffcf9f]";
-		cls += " size-16 flex items-center justify-center";
+		} else cls = adjusted % 2 === 1 ? "bg-[#6d3600]" : "bg-[#ffcf9f]";
+		cls += " flex items-center justify-center";
 		if (moves?.index === i) cls += " border-2 border-red-500";
 		return cls;
 	}
@@ -57,10 +58,22 @@
 		});
 	}
 
+	function calc_cell_size(): void {
+		const h = window.innerHeight;
+		const w = window.innerWidth;
+
+		const smaller = h < w ? h : w;
+
+		cell_size = Math.floor(smaller / 10);
+		console.log("h", h, "w", w, "smaller", smaller, "cell_size", cell_size);
+	}
+
 	onMount(() => {
 		get_board().then((state) => {
 			board = state;
 		});
+		calc_cell_size();
+		addEventListener("resize", () => calc_cell_size());
 	});
 </script>
 
@@ -87,11 +100,15 @@
 				{(i / 8 - 8) * -1}
 			</span>
 		{/if}
-		<span class={get_class(i)}>
+		<span
+			class={get_class(i)}
+			style={`width: ${cell_size}px; height: ${cell_size}px;`}
+		>
 			{#if board[i]}
 				<Piece
 					piece={board[i].type}
 					color={board[i].color}
+					size={cell_size}
 					onclick={() => get_moves(i)}
 				/>
 			{:else}

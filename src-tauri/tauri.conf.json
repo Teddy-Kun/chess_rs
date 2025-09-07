@@ -7,14 +7,17 @@
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "bun run build",
-    "frontendDist": "../build"
+    "frontendDist": "../build",
+    "removeUnusedCommands": true
   },
   "app": {
     "windows": [
       {
         "title": "chess-rs",
         "width": 800,
-        "height": 800
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 800
       }
     ],
     "security": {
