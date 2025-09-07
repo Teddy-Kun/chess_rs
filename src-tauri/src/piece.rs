@@ -38,13 +38,14 @@ impl TryFrom<u8> for PieceType {
 	type Error = PieceTypeError;
 
 	fn try_from(value: u8) -> Result<Self, Self::Error> {
-		if value < PieceType::Pawn as u8 || value > PieceType::King as u8 {
-			Err(PieceTypeError::InvalidU8(value))
-		} else {
-			// # Safety
-			//
-			// Guaranteed to be safe due to the previous check if it is in the bounds of PieceType
-			Ok(unsafe { mem::transmute::<u8, PieceType>(value) })
+		match value {
+			0b00000001 => Ok(PieceType::Pawn),
+			0b00000010 => Ok(PieceType::Knight),
+			0b00000011 => Ok(PieceType::Bishop),
+			0b00000100 => Ok(PieceType::Rook),
+			0b00000101 => Ok(PieceType::Queen),
+			0b00000110 => Ok(PieceType::King),
+			_ => Err(PieceTypeError::InvalidU8(value)),
 		}
 	}
 }
