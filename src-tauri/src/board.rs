@@ -453,36 +453,87 @@ impl Board {
 	fn get_king_moves(&self, i: u8) -> BitBoard {
 		let mut legal = BitBoard::new();
 
+		let piece = self[i];
+		let own_col = piece.get_color();
+
 		if let Some(bottom_left) = Self::board_overflow_add(i, 7, true).get() {
-			legal.insert(bottom_left);
+			if self.occupation.contains(bottom_left) {
+				if self[bottom_left].get_color() != own_col {
+					legal.insert(bottom_left);
+				}
+			} else {
+				legal.insert(bottom_left);
+			}
 		};
 
 		if let Some(bottom) = Self::board_overflow_add(i, 8, false).get() {
-			legal.insert(bottom);
+			if self.occupation.contains(bottom) {
+				if self[bottom].get_color() != own_col {
+					legal.insert(bottom);
+				}
+			} else {
+				legal.insert(bottom);
+			}
 		};
 
 		if let Some(bottom_right) = Self::board_overflow_add(i, 9, true).get() {
-			legal.insert(bottom_right);
+			if self.occupation.contains(bottom_right) {
+				if self[bottom_right].get_color() != own_col {
+					legal.insert(bottom_right);
+				}
+			} else {
+				legal.insert(bottom_right);
+			}
 		};
 
 		if let Some(left) = Self::board_underflow_sub(i, 1, false).get() {
-			legal.insert(left);
+			if self.occupation.contains(left) {
+				if self[left].get_color() != own_col {
+					legal.insert(left);
+				}
+			} else {
+				legal.insert(left);
+			}
 		};
 
 		if let Some(right) = Self::board_overflow_add(i, 1, false).get() {
-			legal.insert(right);
+			if self.occupation.contains(right) {
+				if self[right].get_color() != own_col {
+					legal.insert(right);
+				}
+			} else {
+				legal.insert(right);
+			}
 		};
 
 		if let Some(top_left) = Self::board_underflow_sub(i, 9, true).get() {
-			legal.insert(top_left);
+			if self.occupation.contains(top_left) {
+				if self[top_left].get_color() != own_col {
+					legal.insert(top_left);
+				}
+			} else {
+				legal.insert(top_left);
+			}
 		};
 
 		if let Some(top) = Self::board_underflow_sub(i, 8, false).get() {
-			legal.insert(top);
+			if self.occupation.contains(top) {
+				if self[top].get_color() != own_col {
+					legal.insert(top);
+				}
+			} else {
+				legal.insert(top);
+			}
 		};
 
 		if let Some(top_right) = Self::board_underflow_sub(i, 7, true).get() {
-			legal.insert(top_right);
+			if self.occupation.contains(top_right) {
+				if self[top_right].get_color() != own_col {
+					legal.insert(top_right);
+				}
+			} else {
+				legal.insert(top_right);
+			}
 		};
 
 		let king = self[i];
