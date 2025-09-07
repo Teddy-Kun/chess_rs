@@ -27,7 +27,7 @@
 		return cls;
 	}
 
-	const text_cls = "w-16 h-12 flex items-center justify-center";
+	const text_cls = "flex items-center justify-center my-2";
 
 	function get_moves(index: number): void {
 		if (moves?.index === index) moves = null;
@@ -85,24 +85,28 @@
 </button>
 <div class="m-8 grid grid-cols-10 font-bold text-xl text-white">
 	<p></p>
-	<p class={text_cls}>A</p>
-	<p class={text_cls}>B</p>
-	<p class={text_cls}>C</p>
-	<p class={text_cls}>D</p>
-	<p class={text_cls}>E</p>
-	<p class={text_cls}>F</p>
-	<p class={text_cls}>G</p>
-	<p class={text_cls}>H</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>A</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>B</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>C</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>D</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>E</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>F</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>G</p>
+	<p class={text_cls} style:width={`${cell_size}px`}>H</p>
 	<p></p>
 	{#each { length: 64 }, i}
 		{#if i % 8 === 0}
-			<span class="flex items-center justify-center">
+			<span
+				class="flex justify-end items-center mr-4"
+				style:height={`${cell_size}px`}
+			>
 				{(i / 8 - 8) * -1}
 			</span>
 		{/if}
 		<span
 			class={get_class(i)}
-			style={`width: ${cell_size}px; height: ${cell_size}px;`}
+			style:width={`${cell_size}px`}
+			style:height={`${cell_size}px`}
 		>
 			{#if board[i]}
 				<Piece
@@ -118,7 +122,10 @@
 			{/if}
 		</span>
 		{#if i % 8 === 7}
-			<span class="flex items-center justify-center">
+			<span
+				class="flex justify-start items-center ml-4"
+				style:height={`${cell_size}px`}
+			>
 				{((i - 7) / 8 - 8) * -1}
 			</span>
 		{/if}
