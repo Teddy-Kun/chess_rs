@@ -36,8 +36,15 @@ impl BitBoard {
 	}
 
 	pub fn union(&self, other: Self) -> Self {
-		let new = self.hash | other.hash;
-		Self { hash: new }
+		Self {
+			hash: self.hash | other.hash,
+		}
+	}
+
+	pub fn join(&self, other: Self) -> Self {
+		Self {
+			hash: self.hash & other.hash,
+		}
 	}
 
 	pub fn size(&self) -> u8 {

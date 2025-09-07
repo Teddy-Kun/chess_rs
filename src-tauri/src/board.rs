@@ -206,7 +206,7 @@ impl Board {
 			board,
 			occupation: BitBoard::from(
 				// this is the inital position of all pieces on the board
-				0b111111111111111000000000000000000000000000000001111111111111111,
+				0b1111111111111111000000000000000000000000000000001111111111111111,
 			),
 		}
 	}
@@ -506,8 +506,50 @@ impl Board {
 		};
 
 		let king = self[i];
-		if let Some(false) = king.has_moved() {
-			// TODO: castling
+		if king.has_moved() == Some(false) {
+			// TODO: test
+
+			let kingside_i: u8;
+			let queenside_i: u8;
+			let kingside_mask: BitBoard;
+			let queenside_mask: BitBoard;
+
+			if own_col == Some(Color::Black) {
+				kingside_i = 0;
+				queenside_i = 7;
+				kingside_mask = BitBoard::from(
+					0b0000000000000000000000000000000000000000000000000110000000000000,
+				);
+				queenside_mask = BitBoard::from(
+					0b0000000000000000000000000000000000000000000000000000000000001110,
+				);
+			} else {
+				// white
+				kingside_i = 56;
+				queenside_i = 63;
+				kingside_mask = BitBoard::from(
+					0b0110000000000000000000000000000000000000000000000000000000000000,
+				);
+				queenside_mask = BitBoard::from(
+					0b0000000000001110000000000000000000000000000000000000000000000000,
+				);
+			}
+
+			let kingside = self[kingside_i];
+			if kingside.get_color() == own_col
+				&& kingside.has_moved() == Some(false)
+				&& kingside_mask.join(self.occupation).is_empty()
+			{
+				legal.insert(kingside_i);
+			}
+
+			let queenside = self[queenside_i];
+			if queenside.get_color() == own_col
+				&& queenside.has_moved() == Some(false)
+				&& queenside_mask.join(self.occupation).is_empty()
+			{
+				legal.insert(queenside_i);
+			}
 		}
 
 		println!("legal: {:?}", legal);
