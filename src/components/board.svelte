@@ -29,6 +29,19 @@
 
 	const text_cls = "flex items-center justify-center my-2";
 
+	function move_selected(target: number): void {
+		if (moves)
+			move_piece(moves.index, target).then((res) => {
+				board = res;
+				moves = null;
+			});
+	}
+
+	function clicked_piece(index: number): void {
+		if (moves?.moves.includes(index)) move_selected(index);
+		else get_moves(index);
+	}
+
 	function get_moves(index: number): void {
 		if (moves?.index === index) moves = null;
 		else {
@@ -44,12 +57,8 @@
 	function click_empty(index: number) {
 		if (!moves) return;
 
-		if (moves.moves.includes(index)) {
-			move_piece(moves.index, index).then((res) => {
-				board = res;
-				moves = null;
-			});
-		} else moves = null;
+		if (moves.moves.includes(index)) move_selected(index);
+		else moves = null;
 	}
 
 	function reset(): void {
@@ -113,7 +122,7 @@
 					piece={board[i].type}
 					color={board[i].color}
 					size={cell_size}
-					onclick={() => get_moves(i)}
+					onclick={() => clicked_piece(i)}
 				/>
 			{:else}
 				<button class="size-full" onclick={() => click_empty(i)}>
