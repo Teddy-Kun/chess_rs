@@ -48,7 +48,6 @@ impl Display for BoardIndex {
 
 impl Board {
 	fn board_overflow_add(start: u8, b: u8, diag: bool) -> BoardIndex {
-		println!("a: {}; b: {}; a+b={}", start, b, start + b);
 		let res = start + b;
 		if res > 63 {
 			return BoardIndex::none();
@@ -81,7 +80,6 @@ impl Board {
 			None => return BoardIndex::none(),
 			Some(r) => r,
 		};
-		println!("a: {}; b: {}; a-b={}", start, b, res);
 
 		let res_col = res % 8;
 		match diag {
@@ -551,8 +549,6 @@ impl Board {
 				legal.insert(queenside_i);
 			}
 		}
-
-		println!("legal: {:?}", legal);
 
 		legal
 	}
