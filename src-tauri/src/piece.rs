@@ -57,6 +57,13 @@ pub enum Moved {
 	Yes = 0b00010000,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[repr(u8)]
+pub enum EnPassant {
+	No = 0b00000000,
+	Yes = 0b00100000,
+}
+
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
 pub struct ChessCell {
@@ -124,6 +131,21 @@ impl ChessCell {
 		match moved {
 			true => self.piece |= Moved::Yes as u8,
 			false => self.piece &= !(Moved::Yes as u8),
+		}
+	}
+
+	pub fn eligable_en_pessant_take(&self) -> Option<bool> {
+		if self.is_empty() {
+			None
+		} else {
+			Some(self.piece & (EnPassant::Yes as u8) != 0)
+		}
+	}
+
+	pub fn set_en_pessant(&mut self, value: bool) {
+		match value {
+			true => self.piece = self.piece & !(EnPassant::Yes as u8),
+			false => self.piece = self.piece | (EnPassant::Yes as u8),
 		}
 	}
 }
