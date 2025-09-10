@@ -218,7 +218,7 @@ impl Board {
 	pub fn get_at_position(&self, x: u8, y: u8) -> ChessCell {
 		let index = match Self::coords_to_index(x, y) {
 			Some(i) => i,
-			None => return ChessCell::new(),
+			None => return ChessCell::empty(),
 		};
 		self[index]
 	}
@@ -227,7 +227,7 @@ impl Board {
 		let mut piece = self[index];
 		if !piece.is_empty() {
 			piece.set_moved(true);
-			self.board[index as usize] = ChessCell::new();
+			self.board[index as usize] = ChessCell::empty();
 			self.board[target as usize] = piece;
 			self.occupation.remove(index);
 			self.occupation.insert(target);
@@ -240,42 +240,41 @@ impl Board {
 		let piece = self[i];
 		let own_col = piece.get_color();
 
-		if let Some(col) = piece.get_color() {
-			let math = match col {
-				Color::Black => {
-					if piece.has_moved() == Some(false) {
-						legal.insert(i + 16); // no need to do a checked add because we haven't moved so we can't overflow
-					}
-					Self::board_overflow_add
+		let col = piece.get_color();
+		let math = match col {
+			Color::Black => {
+				if !piece.has_moved() {
+					legal.insert(i + 16); // no need to do a checked add because we haven't moved so we can't overflow
 				}
+				Self::board_overflow_add
+			}
 
-				Color::White => {
-					if piece.has_moved() == Some(false) {
-						legal.insert(i - 16); // no need to do a checked sub because we haven't moved so we can't underflow
-					}
-					Self::board_underflow_sub
+			Color::White => {
+				if !piece.has_moved() {
+					legal.insert(i - 16); // no need to do a checked sub because we haven't moved so we can't underflow
 				}
-			};
-
-			if let Some(step) = math(i, 8, false).get()
-				&& !self.occupation.contains(step)
-			{
-				legal.insert(step);
+				Self::board_underflow_sub
 			}
+		};
 
-			if let Some(left_take) = math(i, 7, true).get()
-				&& self.occupation.contains(left_take)
-				&& own_col != self[left_take].get_color()
-			{
-				legal.insert(left_take);
-			}
+		if let Some(step) = math(i, 8, false).get()
+			&& !self.occupation.contains(step)
+		{
+			legal.insert(step);
+		}
 
-			if let Some(right_take) = math(i, 9, true).get()
-				&& self.occupation.contains(right_take)
-				&& own_col != self[right_take].get_color()
-			{
-				legal.insert(right_take);
-			}
+		if let Some(left_take) = math(i, 7, true).get()
+			&& self.occupation.contains(left_take)
+			&& own_col != self[left_take].get_color()
+		{
+			legal.insert(left_take);
+		}
+
+		if let Some(right_take) = math(i, 9, true).get()
+			&& self.occupation.contains(right_take)
+			&& own_col != self[right_take].get_color()
+		{
+			legal.insert(right_take);
 		}
 
 		legal
@@ -504,7 +503,7 @@ impl Board {
 		};
 
 		let king = self[i];
-		if king.has_moved() == Some(false) {
+		if !king.has_moved() {
 			// TODO: test
 
 			let kingside_i: u8;
@@ -512,7 +511,7 @@ impl Board {
 			let kingside_mask: BitBoard;
 			let queenside_mask: BitBoard;
 
-			if own_col == Some(Color::Black) {
+			if own_col == Color::Black {
 				kingside_i = 0;
 				queenside_i = 7;
 				kingside_mask = BitBoard::from(
@@ -535,7 +534,7 @@ impl Board {
 
 			let kingside = self[kingside_i];
 			if kingside.get_color() == own_col
-				&& kingside.has_moved() == Some(false)
+				&& !kingside.has_moved()
 				&& kingside_mask.join(self.occupation).is_empty()
 			{
 				legal.insert(kingside_i);
@@ -543,7 +542,7 @@ impl Board {
 
 			let queenside = self[queenside_i];
 			if queenside.get_color() == own_col
-				&& queenside.has_moved() == Some(false)
+				&& !queenside.has_moved()
 				&& queenside_mask.join(self.occupation).is_empty()
 			{
 				legal.insert(queenside_i);

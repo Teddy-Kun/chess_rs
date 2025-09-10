@@ -71,7 +71,7 @@ pub struct ChessCell {
 }
 
 impl ChessCell {
-	pub fn new() -> Self {
+	pub fn empty() -> Self {
 		Self { piece: 0 }
 	}
 
@@ -90,23 +90,17 @@ impl ChessCell {
 	}
 
 	/// Returns None if the piece is empty
-	pub fn get_color(&self) -> Option<Color> {
-		if self.is_empty() {
-			None
-		} else if (self.piece & Color::Black as u8) > 0 {
-			Some(Color::Black)
+	pub fn get_color(&self) -> Color {
+		if (self.piece & Color::Black as u8) > 0 {
+			Color::Black
 		} else {
-			Some(Color::White)
+			Color::White
 		}
 	}
 
 	/// Returns None if the piece is empty
-	pub fn has_moved(&self) -> Option<bool> {
-		if self.is_empty() {
-			None
-		} else {
-			Some(self.piece & (Moved::Yes as u8) != 0)
-		}
+	pub fn has_moved(&self) -> bool {
+		self.piece & (Moved::Yes as u8) != 0
 	}
 
 	/// Returns None if the piece is empty or if we somehow have 0b00000111 as the final bits, the latter of which should never happen
@@ -134,12 +128,8 @@ impl ChessCell {
 		}
 	}
 
-	pub fn eligable_en_pessant_take(&self) -> Option<bool> {
-		if self.is_empty() {
-			None
-		} else {
-			Some(self.piece & (EnPassant::Yes as u8) != 0)
-		}
+	pub fn eligable_en_pessant_take(&self) -> bool {
+		self.piece & (EnPassant::Yes as u8) != 0
 	}
 
 	pub fn set_en_pessant(&mut self, value: bool) {
@@ -178,7 +168,7 @@ impl From<ChessCell> for char {
 			_ => return ' ',
 		};
 
-		match value.get_color().unwrap() {
+		match value.get_color() {
 			Color::Black => unsafe { char::from_u32_unchecked(c as u32 + 6) },
 			Color::White => c,
 		}
@@ -187,7 +177,7 @@ impl From<ChessCell> for char {
 
 impl Default for ChessCell {
 	fn default() -> Self {
-		Self::new()
+		Self::empty()
 	}
 }
 
@@ -210,9 +200,9 @@ mod tests {
 		for col in colors {
 			for piece_type in all_types {
 				let piece = ChessCell::with_piece(piece_type, col, Moved::Yes);
-				assert_eq!(piece.get_color(), Some(col));
+				assert_eq!(piece.get_color(), col);
 				assert_eq!(piece.get_type(), Some(piece_type));
-				assert_eq!(piece.has_moved(), Some(true));
+				assert_eq!(piece.has_moved(), true);
 			}
 		}
 	}
